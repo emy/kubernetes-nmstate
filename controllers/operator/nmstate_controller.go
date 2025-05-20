@@ -149,13 +149,9 @@ func (r *NMStateReconciler) applyManifests(instance *nmstatev1.NMState, ctx cont
 		return err
 	}
 
-	netPolEnable := environment.GetEnvVar("NETWORK_POLICY", "true") == "true"
-	var err error
-	if netPolEnable {
-		if err := r.applyNetworkPolicies(instance); err != nil {
-			errors.Wrap(err, "failed applying network policies")
-			return err
-		}
+	if err := r.applyNetworkPolicies(instance); err != nil {
+		errors.Wrap(err, "failed applying network policies")
+		return err
 	}
 
 	if err := r.applyHandler(instance); err != nil {
@@ -192,12 +188,15 @@ func (r *NMStateReconciler) applyNamespace(instance *nmstatev1.NMState) error {
 }
 
 func (r *NMStateReconciler) applyNetworkPolicies(instance *nmstatev1.NMState) error {
-	data := render.MakeRenderData()
-	data.Data["HandlerNamespace"] = os.Getenv("HANDLER_NAMESPACE")
-	data.Data["PluginNamespace"] = environment.GetEnvVar("HANDLER_NAMESPACE", "openshift-nmstate")
-	data.Data["PluginName"] = environment.GetEnvVar("PLUGIN_NAME", "nmstate-console-plugin")
-	data.Data["PluginPort"] = environment.GetEnvVar("PLUGIN_PORT", "9443")
-	return r.renderAndApply(instance, data, "netpol", true)
+	if instance.Spec.NetworkPolicyConfiguration.Enabled {
+		data := render.MakeRenderData()
+		data.Data["HandlerNamespace"] = os.Getenv("HANDLER_NAMESPACE")
+		data.Data["PluginNamespace"] = environment.GetEnvVar("HANDLER_NAMESPACE", "openshift-nmstate")
+		data.Data["PluginName"] = environment.GetEnvVar("PLUGIN_NAME", "nmstate-console-plugin")
+		data.Data["PluginPort"] = environment.GetEnvVar("PLUGIN_PORT", "9443")
+		return r.renderAndApply(instance, data, "netpol", true)
+	}
+	return nil
 }
 
 func (r *NMStateReconciler) applyRBAC(instance *nmstatev1.NMState) error {
@@ -321,6 +320,7 @@ func (r *NMStateReconciler) applyHandler(instance *nmstatev1.NMState) error {
 	}
 
 	probeConfig := instance.Spec.ProbeConfiguration
+	networkPolicyConfig := instance.Spec.NetworkPolicyConfiguration
 
 	data.Data["HandlerNamespace"] = os.Getenv("HANDLER_NAMESPACE")
 	data.Data["HandlerImage"] = os.Getenv("HANDLER_IMAGE")
@@ -338,6 +338,7 @@ func (r *NMStateReconciler) applyHandler(instance *nmstatev1.NMState) error {
 	data.Data["HandlerAffinity"] = handlerAffinity
 	data.Data["SelfSignConfiguration"] = selfSignConfiguration
 	data.Data["ProbeConfiguration"] = probeConfig
+	data.Data["NetworkPolicyConfiguration"] = networkPolicyConfig
 
 	isOpenShift, err := cluster.IsOpenShift(r.APIClient)
 	if err != nil {

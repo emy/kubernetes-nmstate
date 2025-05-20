@@ -58,6 +58,12 @@ type NMStateSpec struct {
 	// +kubebuilder:default:={}
 	// +optional
 	ProbeConfiguration NMStateProbeConfiguration `json:"probeConfiguration,omitempty"`
+	// NetworkPolicyConfiguration is an optional configuration to enable/disable network policies.
+	// If NetworkPolicyConfiguration is specified, the handler will use the specified behavior instead of the default behavior,
+	// which is "activated".
+	// +kubebuilder:default:={enabled: true}
+	// +optional
+	NetworkPolicyConfiguration NMStateNetworkPolicyConfiguration `json:"networkPolicyConfiguration,omitempty"`
 }
 
 type SelfSignConfiguration struct {
@@ -82,6 +88,12 @@ type NMStateDNSProbeConfiguration struct {
 	// +kubebuilder:default:="root-servers.net"
 	// +required
 	Host string `json:"host,omitempty"`
+}
+
+type NMStateNetworkPolicyConfiguration struct {
+	// +kubebuilder:default:=true
+	// +required
+	Enabled bool `json:"enabled,omitempty"`
 }
 
 // NMStateStatus defines the observed state of NMState
