@@ -149,9 +149,13 @@ func (r *NMStateReconciler) applyManifests(instance *nmstatev1.NMState, ctx cont
 		return err
 	}
 
-	if err := r.applyNetworkPolicies(instance); err != nil {
-		errors.Wrap(err, "failed applying network policies")
-		return err
+	netPolEnable := environment.GetEnvVar("NETWORK_POLICY", "true") == "true"
+	var err error
+	if netPolEnable {
+		if err := r.applyNetworkPolicies(instance); err != nil {
+			errors.Wrap(err, "failed applying network policies")
+			return err
+		}
 	}
 
 	if err := r.applyHandler(instance); err != nil {

@@ -1932,6 +1932,19 @@ spec:
                       type: string
                   type: object
                 type: array
+              networkPolicyConfiguration:
+                default: {}
+                description: |-
+                  NetworkPolicyConfiguration is an optional configuration to enable/disable network policies.
+                  If NetworkPolicyConfiguration is specified, the handler will use the specified behavior instead of the default behavior,
+                  which is "activated".
+                properties:
+                  enabled:
+                    default: "true"
+                    type: boolean
+                required:
+                - enabled
+                type: object
               nodeSelector:
                 additionalProperties:
                   type: string
