@@ -47,6 +47,10 @@ oc create -f test/e2e/nmstate.yaml
 # On first deployment, it can take a while for all of the pods to come up
 # First wait for the handler pods to be created
 while ! oc get pods -n ${NAMESPACE} | grep handler; do sleep 1; done
+if [ "${DISABLE_CONSOLE}" != "" ]; then
+  echo "Deleting console deployment... (\$DISABLE_CONSOLE was passed)"
+  oc delete deployment -n ${NAMESPACE} nmstate-console-plugin || true
+fi
 # Then wait for them to be ready
 while oc get pods -n ${NAMESPACE} | grep "0/1"; do sleep 1; done
 # NOTE(bnemec): The test being filtered with "bridged" was re-enabled in 4.8, but seems to be consistently failing on OCP.
